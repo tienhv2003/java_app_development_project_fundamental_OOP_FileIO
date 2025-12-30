@@ -1,26 +1,28 @@
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.io.*;
-import java.time.LocalDate;
+import java.io.IOException;
 
 public class PetCareScheduler {
     private static Scanner sc = new Scanner(System.in);
     private static Map<String, Pet> pets = new HashMap<>();
     public static void main(String[] args) {
         // Load file
-        //
+        loadPetAndAppointmentsFromFile();
         boolean running = true;
         while (running) {
             System.out.println("==========Welcome to Pet Care Scheduler!==========");
             System.out.println("1. Register Pet");
             System.out.println("2. Schedule appointments");
-            System.out.println("3. Store date");
-            System.out.println("4. Display records");
+            System.out.println("3. Display records");
+            System.out.println("4. Store date");
             System.out.println("5. Generate reports");
-            System.out.println("6. Choose an option: ");
+            System.out.println("6. Exit");
+            System.out.println("Choose an option: ");
 
             String option = sc.nextLine();
 
@@ -35,8 +37,13 @@ public class PetCareScheduler {
                     displayRecords();
                     break;
                 case "4":
+                    savePetAndAppointments();
                     break;
                 case "5":
+                    generateReports();
+                    break;
+                case "6":
+                    running = false;
                     break;
                 default:
                     System.out.println("Invalid option!. Please select 1-5.");
@@ -227,7 +234,7 @@ public class PetCareScheduler {
                     for (Pet pet : pets.values()) {
                         System.out.println(pet.toString());
                     }
-                    continue;
+                    break;
                 case "2":
                     System.out.println("=====All appointments for a specific pet===== ");
                     while (true){
@@ -251,7 +258,7 @@ public class PetCareScheduler {
                             break;
                         }
                     }
-                    continue;
+                    break;
                 case "3":
                     System.out.println("=====Upcoming appointments for all pets (Grouped by Pet)=====");
                     boolean upcoming = false;
@@ -268,7 +275,7 @@ public class PetCareScheduler {
                     if (!upcoming) {
                         System.out.println("ERROR: There are not upcoming appointments ");
                     }
-                    continue;
+                    break;
                 case "4":
                     System.out.println("=====Past appointment history for each pet=====");
                     boolean past = false;
@@ -284,8 +291,9 @@ public class PetCareScheduler {
                     if (!past) {
                         System.out.println("ERROR: There are not past appointments ");
                     }
-                    continue;
+                    break;
                 case "5":
+                    System.out.println("Exiting...");
                     break;
                 case "6":
                     System.out.println("=====Upcoming appointments for all pets (Grouped by date)=====");
@@ -315,14 +323,105 @@ public class PetCareScheduler {
                                 + " - " + awp.getPet().getPetName()
                                 + " - " + awp.getAppointment());
                     }
-                    continue;
+                    break;
                 default:
                     System.out.println("Invalid option! Enter again.");
                     continue;
             }
+            if (option.equals("5")) {
+                break;
+            }
         }
     }
 
+    private static void savePetAndAppointments() {
+        try {
+            // Create a FileOutputStream to write the file named "PetAndAppointment.ser"
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("PetAndAppointment.ser"));
+            // Write the entire map to the file
+            out.writeObject(pets);
+            // If successful print message
+            System.out.println("Pet and appointments saved to file");
+        } catch (IOException e) {
+            System.out.println("ERROR: can not saving data "+ e.getMessage());
+        }
+    }
 
+    private static void loadPetAndAppointmentsFromFile() {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream("PetAndAppointment.ser"))){
+            pets = (Map<String, Pet>) in.readObject();
+            System.out.println("Pet and appointments loaded from file");
+        } catch (FileNotFoundException e) {
+            System.out.println("No saved data found. Starting fresh.");
+
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error loading data: " + e.getMessage());
+        }
+    }
+
+    private static void generateReports() {
+        if (pets.isEmpty()) {
+            System.out.println("ERROR: There are no pets registered!");
+            return;
+        }
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime nextWeek = today.plusDays(7);
+        LocalDateTime pastSixMonths = today.minusMonths(6);
+
+
+        while (true){
+            System.out.println("===== Generating report =====");
+            System.out.println("1. Pets with upcoming appointments in the next week ");
+            System.out.println("2. Pets overdue for a vet visit (such as, no vet visit in the last 6 months) ");
+            System.out.println("3. Exit ");
+            String option = sc.nextLine();
+            switch (option) {
+                case "1":
+                    boolean upcoming = false;
+                    System.out.println("===== Upcoming appointments in the next week =====");
+                    for (Pet pet : pets.values()) {
+                        for (Appointment appointment : pet.getAppointments()) {
+                            if (!appointment.getDateTime().isBefore(today) && appointment.getDateTime().isBefore(nextWeek))
+                            {
+                                System.out.println("   " +appointment.getDateTime() + "__" + pet.getPetId() + "__" + pet.getPetName());
+                                upcoming = true;
+                            }
+                        }
+                    }
+                    if (!upcoming) {
+                        System.out.println("There are not upcoming appointments in the next week ");
+                    }
+                    break;
+                case "2":
+                    boolean anyOverdue = false;
+                    System.out.println("===== Pets overdue for a vet visit (6 months) =====");
+                    for (Pet pet : pets.values()) {
+                        boolean hasRecentVisit = false;
+                        for (Appointment appointment : pet.getAppointments()) {
+                            if (appointment.getDateTime().isBefore(today) && appointment.getDateTime().isAfter(pastSixMonths)) {
+                                hasRecentVisit = true;
+                                break;
+                            }
+                        }
+                        if (!hasRecentVisit) {
+                            System.out.println("   " + pet.getPetId() + "__" + pet.getPetName());
+                            anyOverdue = true;
+                        }
+                    }
+                    if (!anyOverdue) {
+                        System.out.println("There are not pets overdue for a vet visit (6 months)");
+                    }
+                    break;
+                case "3":
+                    System.out.println("Exiting report menu...");
+                    break;
+                default:
+                    System.out.println("Invalid option! Enter again.");
+            }
+            if (option.equals("3")) {
+                break;
+            }
+        }
+    }
 }
 

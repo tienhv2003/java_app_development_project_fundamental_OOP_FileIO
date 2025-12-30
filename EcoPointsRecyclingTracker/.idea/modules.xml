@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/PetCareScheduler.iml" filepath="$PROJECT_DIR$/PetCareScheduler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/EcoPointsRecyclingTracker.iml" filepath="$PROJECT_DIR$/EcoPointsRecyclingTracker.iml" />
     </modules>
   </component>
 </project>

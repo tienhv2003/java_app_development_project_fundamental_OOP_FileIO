@@ -90,12 +90,12 @@ public class Pet {
     @Override
     public String toString() {
         return
-                "ID: " + petId + "__" +
-                "Name: " + petName + "__" +
-                "Breed: " + petBreed + "__" +
-                "Age: "  + petAge + "__"+
-                "Owner: " + ownerName + "__" +
-                "Contact: " + contactInfo +"__"+
-                "Registration Date: " + registrationDate;
+                "ID:" + petId + "____" +
+                "Name:" + petName + "____" +
+                "Breed:" + petBreed + "____" +
+                "Age:"  + petAge + "____"+
+                "Owner:" + ownerName + "____" +
+                "Contact:" + contactInfo +"____"+
+                "Registration Date:" + registrationDate;
     }
 }
